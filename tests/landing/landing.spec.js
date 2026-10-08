@@ -1,18 +1,16 @@
-import { test, expect } from "@playwright/test";
-import Home from "../../pages/Home";
-const LandingPage = require("../../pages/LandingPage");
+const { test, expect } = require('@playwright/test');
+const LandingPage = require('../../pages/LandingPage');
 
-test("Login", async ({ page }) => {
-  const std = new LandingPage(page);
-  const ho = new Home(page);
+test('Login', async ({ page }) => {
+  const landing = new LandingPage(page);
 
-  await test.step("openurl", async () => {
-    await std.goto();
+  await test.step('Open DemoBlaze', async () => {
+    await landing.goto();
+    await expect(page).toHaveTitle(/STORE/i);
   });
 
-  await test.step("Login User", async () => {
-    await std.login();
-    await std.wait(2);
-    
+  await test.step('Login User', async () => {
+    await landing.login();
+    await expect(landing.userIndicator).toBeVisible();
   });
 });
