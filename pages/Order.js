@@ -34,11 +34,18 @@ class Order {
       const addToCart = this.page.locator('a.btn-success', { hasText: 'Add to cart' });
       await addToCart.waitFor({ state: 'visible', timeout: 15_000 });
 
-      await this.page.once('dialog', async dialog => dialog.accept());
+      const dialogPromise = this.page.waitForEvent('dialog', { timeout: 10_000 });
       await addToCart.click();
+      const dialog = await dialogPromise;
+      if (!/added/i.test(dialog.message())) {
+        throw new Error(`Unexpected add-to-cart dialog: ${dialog.message()}`);
+      }
+      await dialog.accept();
 
+      // DemoBlaze persists the cart asynchronously after the alert.
+      await this.page.waitForTimeout(1_000);
       await this.homeLink.click();
-      await this.page.waitForTimeout(500);
+      await this.page.waitForTimeout(1_000);
       console.log(`Added product: ${productName}`);
     }
   }
@@ -49,7 +56,13 @@ class Order {
 
   async cartt() {
     await this.cartLink.click();
-    await this.cartRows.first().waitFor({ state: 'visible', timeout: 15_000 });
+    await this.page.waitForLoadState('domcontentloaded').catch(() => {});
+
+    await this.page.waitForFunction(
+      () => document.querySelectorAll('#tbodyid tr').length > 0,
+      null,
+      { timeout: 30_000 }
+    );
   }
 
   async tabb() {
