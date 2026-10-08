@@ -1,136 +1,118 @@
 class Order {
   constructor(page) {
     this.page = page;
-    this.caar = page.locator('//a[@class="hrefch"]');
-    this.hoo = page.locator('//a[@class="nav-link" and text()="Home "]');
-    this.carte = page.locator('//a[@class="nav-link" and text()="Cart"]');
-    this.tab = page.locator('//tbody[@id="tbodyid"]//tr');
-    this.plcebuto = page.locator('//button[@data-target="#orderModal"]');
-
-    this.placeform = page.locator('//h5[@id="orderModalLabel"]');
-    this.placeNam = page.locator('//input[@id="name"]');
-    this.placeCou = page.locator('//input[@id="country"]');
-    this.placeCit = page.locator('//input[@id="city"]');
-    this.placeId = page.locator('//input[@id="card"]');
-    this.placeMon = page.locator('//input[@id="month"]');
-    this.placeYer = page.locator('//input[@id="year"]');
-    this.placePur = page.locator(
-      '//button[@class="btn btn-primary" and text()="Purchase"]',
-    );
-    this.confir = page.locator('div[class*="sweet-alert"]');
-    this.conInfo = page.locator('//p[@class="lead text-muted "]');
-    this.ok = page.locator('//button[text()="OK"]');
+    this.products = page.locator('a.hrefch');
+    this.homeLink = page.locator('a.nav-link', { hasText: 'Home' });
+    this.cartLink = page.locator('#cartur');
+    this.cartRows = page.locator('#tbodyid tr');
+    this.placeOrderButton = page.locator('button[data-target="#orderModal"]');
+    this.orderFormTitle = page.locator('#orderModalLabel');
+    this.name = page.locator('#name');
+    this.country = page.locator('#country');
+    this.city = page.locator('#city');
+    this.card = page.locator('#card');
+    this.month = page.locator('#month');
+    this.year = page.locator('#year');
+    this.purchaseButton = page.locator('#orderModal button', { hasText: 'Purchase' });
+    this.confirmation = page.locator('.sweet-alert');
+    this.confirmationInfo = page.locator('.sweet-alert .lead');
+    this.okButton = page.locator('.sweet-alert button', { hasText: 'OK' });
   }
-  async booking() {
-    const items = this.page.locator('//a[@class="hrefch"]');
-    const count = await items.count();
 
-    for (let i = 0; i < 4; i++) {
-      const randomIndex = Math.floor(Math.random() * count);
-      await items.nth(randomIndex).click();
-      await this.page.locator('//a[contains(@class,"btn-success")]').click();
-      await this.hoo.click();
+  async booking(productCount = 2) {
+    for (let i = 0; i < productCount; i += 1) {
+      const items = this.products;
+      await items.first().waitFor({ state: 'visible', timeout: 15_000 });
+      const productName = (await items.first().textContent())?.trim() || `Product ${i + 1}`;
+
+      await items.first().click();
+      const addToCart = this.page.locator('a.btn-success', { hasText: 'Add to cart' });
+      await addToCart.waitFor({ state: 'visible', timeout: 15_000 });
+
+      await this.page.once('dialog', async dialog => dialog.accept());
+      await addToCart.click();
+
+      await this.homeLink.click();
+      await this.page.waitForTimeout(500);
+      console.log(`Added product: ${productName}`);
     }
   }
-  async reloaad() {
-    await this.page.reload();
+
+  async reload() {
+    await this.page.reload({ waitUntil: 'domcontentloaded' });
   }
+
   async cartt() {
-    await this.carte.click();
+    await this.cartLink.click();
+    await this.cartRows.first().waitFor({ state: 'visible', timeout: 15_000 });
   }
 
   async tabb() {
-    const rows = this.page.locator('//tbody[@id="tbodyid"]//tr');
-    const count = await rows.count();
-
-    console.log("Total Rows:", count);
-
-    for (let i = 0; i < count; i++) {
-      const name = await rows.nth(i).locator("td").nth(1).textContent();
-      console.log(`Item ${i + 1}:`, name);
+    await this.cartRows.first().waitFor({ state: 'visible', timeout: 15_000 });
+    const rows = await this.cartRows.count();
+    const items = [];
+    for (let i = 0; i < rows; i += 1) {
+      items.push((await this.cartRows.nth(i).locator('td').nth(1).textContent())?.trim() || '');
     }
+    console.log('Cart items:', items);
+    return items;
   }
 
-  async delet() {
-    const rows = this.page.locator('//tbody[@id="tbodyid"]//tr');
+  async deleteLastItem() {
+    const before = await this.cartRows.count();
+    if (before < 1) throw new Error('Cart is empty; cannot delete an item.');
 
-    //  wait until table has at least 1 row
-    await this.page.waitForSelector('//tbody[@id="tbodyid"]//tr');
+    const lastRow = this.cartRows.last();
+    const productName = (await lastRow.locator('td').nth(1).textContent())?.trim() || '';
+    await lastRow.locator('a').click();
 
-    while ((await rows.count()) > 5) {
-      const count = await rows.count();
+    await this.page.waitForFunction(
+      expected => document.querySelectorAll('#tbodyid tr').length === expected,
+      before - 1
+    );
 
-      const lastRow = rows.nth(count - 1);
-      const del = lastRow.locator("//td//a[text()]");
-
-      await del.click();
-      await this.page.waitForTimeout(3000);
-
-      //  wait until table updates (row removed)
-      await this.page.waitForFunction(
-        () => document.querySelectorAll("#tbodyid tr").length > 0,
-      );
-    }
-
-    console.log("Final Count:", await rows.count());
+    console.log(`Deleted cart item: ${productName}`);
   }
 
-  //console.log("Final Count:", await rows.count());
-
-  async scrol() {
-    await page.evaluate(() => {
-      window.scrollTo(0, document.body.scrollHeight);
-    });
-  }
   async checkoutt() {
-    //  wait for table visible
-    await this.page.waitForSelector("#tbodyid tr");
+    const rows = await this.cartRows.count();
+    if (rows < 1) throw new Error('Cart is empty; cannot validate total.');
 
-    const prices = await this.page
-      .locator('//tbody[@id="tbodyid"]//tr//td[3]')
-      .allTextContents();
+    const prices = await this.page.locator('#tbodyid tr td:nth-child(3)').allTextContents();
+    const sum = prices.reduce((total, value) => total + Number(value.trim()), 0);
 
-    let sum = 0;
-    for (const p of prices) {
-      sum += Number(p);
-    }
+    await this.page.locator('#totalp').waitFor({ state: 'visible', timeout: 15_000 });
+    const total = Number((await this.page.locator('#totalp').textContent())?.trim() || 0);
 
-    // wait for total to be visible
-    await this.page.waitForSelector("#totalp");
-
-    const total = Number(await this.page.locator("#totalp").textContent());
-
-    console.log("Sum:", sum);
-    console.log("Total:", total);
+    if (sum !== total) throw new Error(`Cart total mismatch. Calculated=${sum}, UI=${total}`);
+    console.log(`Cart total validated: ${total}`);
+    return { sum, total };
   }
 
   async placeorder() {
-    await this.plcebuto.hover();
-    await this.plcebuto.click();
+    await this.placeOrderButton.click();
+    await this.orderFormTitle.waitFor({ state: 'visible', timeout: 10_000 });
   }
 
   async plceOrderFom() {
-    await this.placeform.hover();
-    await this.placeNam.fill("Satyen");
-    await this.placeCou.fill("India");
-    await this.placeCit.fill("Indore");
-    await this.placeId.fill("4521454589745527");
-    await this.placeMon.fill("April");
-    await this.placeYer.fill("2026");
+    await this.name.fill(process.env.ORDER_NAME || 'Satyen');
+    await this.country.fill(process.env.ORDER_COUNTRY || 'India');
+    await this.city.fill(process.env.ORDER_CITY || 'Indore');
+    await this.card.fill(process.env.ORDER_CARD || '4111111111111111');
+    await this.month.fill(process.env.ORDER_MONTH || 'April');
+    await this.year.fill(process.env.ORDER_YEAR || '2026');
   }
 
-  async purchase() {
-    await this.placePur.click();
-  }
+  async purchase() { await this.purchaseButton.click(); }
 
-  async confirmation() {
-    const coms = await this.conInfo.textContent();
-    console.log(coms);
+  async confirmationText() {
+    await this.confirmation.waitFor({ state: 'visible', timeout: 15_000 });
+    return (await this.confirmationInfo.textContent())?.trim() || '';
   }
 
   async okkay() {
-    await this.ok.hover();
-    await this.ok.click();
+    await this.okButton.click();
+    await this.confirmation.waitFor({ state: 'hidden', timeout: 10_000 }).catch(() => {});
   }
 }
 
