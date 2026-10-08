@@ -20,12 +20,17 @@ class Order {
   }
 
   async booking(productCount = 2) {
-    for (let i = 0; i < productCount; i += 1) {
-      const items = this.products;
-      await items.first().waitFor({ state: 'visible', timeout: 15_000 });
-      const productName = (await items.first().textContent())?.trim() || `Product ${i + 1}`;
+    const available = await this.products.count();
+    if (available < productCount) {
+      throw new Error(`Expected at least ${productCount} products, found ${available}.`);
+    }
 
-      await items.first().click();
+    for (let i = 0; i < productCount; i += 1) {
+      const item = this.products.nth(i);
+      await item.waitFor({ state: 'visible', timeout: 15_000 });
+      const productName = (await item.textContent())?.trim() || `Product ${i + 1}`;
+
+      await item.click();
       const addToCart = this.page.locator('a.btn-success', { hasText: 'Add to cart' });
       await addToCart.waitFor({ state: 'visible', timeout: 15_000 });
 
