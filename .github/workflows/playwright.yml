@@ -1,4 +1,5 @@
 name: Playwright E2E CI
+# Allure reporting enabled
 
 on:
   push:
