@@ -34,8 +34,14 @@ jobs:
           node-version: 22
           cache: npm
 
+      - name: Setup Java for Allure
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
       - name: Install dependencies
-        run: npm ci
+        run: npm install --no-audit --no-fund
 
       - name: Install Playwright browser
         run: npx playwright install --with-deps ${{ matrix.browser }}
@@ -52,6 +58,28 @@ jobs:
         with:
           name: playwright-report-${{ matrix.browser }}
           path: playwright-report/
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Generate Allure report
+        if: always()
+        run: npm run report:allure
+
+      - name: Upload Allure results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-results-${{ matrix.browser }}
+          path: allure-results/
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Upload Allure HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-report-${{ matrix.browser }}
+          path: allure-report/
           if-no-files-found: warn
           retention-days: 14
 
