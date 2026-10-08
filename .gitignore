@@ -16,3 +16,7 @@ node_modules/
 Thumbs.db
 .vscode/
 .idea/
+
+# Allure generated output
+allure-results/
+allure-report/
