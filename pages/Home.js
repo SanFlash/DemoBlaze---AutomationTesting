@@ -4,7 +4,7 @@ class Home {
     this.userIndicator = page.locator('#nameofuser');
     this.previousCarousel = page.locator('#carouselExampleIndicators .carousel-control-prev');
     this.nextCarousel = page.locator('#carouselExampleIndicators .carousel-control-next');
-    this.categories = page.locator('#cat .list-group-item');
+    this.categories = page.locator('#cat a');
     this.productCards = page.locator('.card');
     this.footerNext = page.locator('#next2');
     this.footerPrevious = page.locator('#prev2');
