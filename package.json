@@ -14,7 +14,9 @@
     "test:debug": "playwright test --debug",
     "report": "playwright show-report",
     "report:allure": "allure generate allure-results --clean -o allure-report",
-    "report:allure:open": "allure open allure-report"
+    "report:allure:open": "allure open allure-report",
+    "test:allure": "node scripts/run-with-allure.js",
+    "allure:clean": "node -e \"const fs=require('fs'); for(const d of ['allure-results','allure-report']) fs.rmSync(d,{recursive:true,force:true});\""
   },
   "devDependencies": {
     "@playwright/test": "^1.59.1",
