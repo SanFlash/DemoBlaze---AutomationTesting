@@ -1,90 +1,62 @@
 class Home {
   constructor(page) {
     this.page = page;
-    this.buton = page.locator('//button[@type="button" and text()="Sign up"]');
-    this.chek = page.locator('//a[@id="nameofuser"]');
-    this.prev = page.locator('//span[@class="sr-only" and text()="Previous"]');
-    this.nex = page.locator('//span[@class="sr-only" and text()="Next"]');
-    this.category = page.locator('//div[@class="list-group"]//a');
-    this.footprev = page.locator('//button[@id="prev2"]');
-    this.footnex = page.locator('//button[@id="next2"]');
-    this.contac = page.locator('//a[@class="nav-link" and text()="Contact"]');
-    this.sendms =page.locator('//button[@type="button" and text()="Send message"]');
-    this.newmsg = page.locator('//h5[@id="exampleModalLabel"]').textContent();
-    this.emai = page.locator('//input[@id="recipient-email"]');
-    this.namee=page.locator('//input[@id="recipient-name"]');
-    this.txtare = page.locator('//textarea[@id="message-text"]');
-    
-  }
-
-  async wait(seconds) {
-    await this.page.waitForTimeout(seconds * 1000);
+    this.userIndicator = page.locator('#nameofuser');
+    this.previousCarousel = page.locator('#carouselExampleIndicators .carousel-control-prev');
+    this.nextCarousel = page.locator('#carouselExampleIndicators .carousel-control-next');
+    this.categories = page.locator('#cat .list-group-item');
+    this.productCards = page.locator('.card');
+    this.footerNext = page.locator('#next2');
+    this.footerPrevious = page.locator('#prev2');
+    this.contactLink = page.locator('a.nav-link', { hasText: 'Contact' });
+    this.contactModal = page.locator('#exampleModal');
+    this.sendMessageButton = this.contactModal.locator('button', { hasText: 'Send message' });
+    this.emailInput = page.locator('#recipient-email');
+    this.nameInput = page.locator('#recipient-name');
+    this.messageInput = page.locator('#message-text');
   }
 
   async visit() {
-    await this.chek.hover();
-    let l = await this.chek.textContent();
-    console.log(l);
+    await this.userIndicator.hover();
+    return (await this.userIndicator.textContent())?.trim();
   }
 
-  async corsoPre() {
-    await this.prev.hover();
-    await this.prev.click();
-  }
-
-  async corsoNex() {
-    await this.nex.hover();
-    await this.nex.click();
-  }
+  async corsoPre() { await this.previousCarousel.click(); }
+  async corsoNex() { await this.nextCarousel.click(); }
 
   async cator() {
-    const links = this.page.locator('//div[@class="list-group"]//a');
+    return (await this.categories.allTextContents()).map(v => v.trim()).filter(Boolean);
+  }
 
-    const count = await links.count();
-
-    for (let i = 1; i < count; i++) {
-      const text = await links.nth(i).textContent();
-      console.log(text);
+  async card() {
+    const count = await this.productCards.count();
+    const products = [];
+    for (let i = 0; i < count; i += 1) {
+      const card = this.productCards.nth(i);
+      products.push({
+        name: (await card.locator('.card-title').textContent())?.trim() || '',
+        price: (await card.locator('.card-block h5').textContent())?.trim() || '',
+      });
     }
-    console.log("Done")
-
+    return products;
   }
 
-
-  async card(){
-    const cardd =this.page.locator('//h4[@class="card-title"]');
-    const cardCose =this.page.locator('//div[@class="card-block"]//h5')
-    const count = await cardd.count();
-
-    for (let i = 0; i < count; i++) {
-      const text = await cardd.nth(i).textContent();
-      const texts = await cardCose.nth(i).textContent();
-      console.log(text);
-      console.log(texts);
-    }
+  async buchek() {
+    await this.footerNext.click();
+    await this.footerPrevious.click();
   }
 
-  async buchek(){
-    await this.footnex.hover();
-    await this.footnex.click();
-    await this.footprev.hover();
-    await this.footprev.click();
+  async contact() {
+    await this.contactLink.click();
+    await this.contactModal.waitFor({ state: 'visible' });
+
+    await this.emailInput.fill(process.env.CONTACT_EMAIL || 'test@example.com');
+    await this.nameInput.fill(process.env.CONTACT_NAME || 'Satyendra');
+    await this.messageInput.fill('Automated DemoBlaze contact-form verification.');
+
+    await this.page.once('dialog', async dialog => dialog.accept());
+    await this.sendMessageButton.click();
   }
-
-  async contact(){
-    await this.contac.hover();
-    await this.contac.click();
-    console.log("Contact Open");
-    await this.emai.fill('satyen@amwebtech.com');
-    await this.namee.fill('Satyendra');
-    await this.txtare.fill('This is the demo message for the textarea \n do not have time to finish the complete\n message so  dont waste your time.');
-    await this.sendms.click();
-    console.log("Sended senseless message");
-  }
-
-
-
-
 }
 
 module.exports = Home;
