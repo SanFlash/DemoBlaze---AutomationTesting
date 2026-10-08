@@ -1,15 +1,21 @@
 {
-  "name": "demoblaze",
-  "version": "1.0.0",
+  "name": "demoblaze-playwright-automation",
+  "version": "2.0.0",
   "private": true,
-  "description": "End-to-end DemoBlaze UI automation using Playwright and JavaScript",
+  "description": "Standard Playwright POM automation framework for DemoBlaze",
   "scripts": {
     "test": "playwright test",
-    "test:headed": "playwright test --headed",
+    "test:ci": "playwright test",
     "test:chromium": "playwright test --project=chromium",
-    "test:report": "playwright show-report"
+    "test:firefox": "playwright test --project=firefox",
+    "test:webkit": "playwright test --project=webkit",
+    "test:smoke": "playwright test tests/smoke",
+    "test:headed": "playwright test --headed",
+    "test:debug": "playwright test --debug",
+    "report": "playwright show-report"
   },
   "devDependencies": {
-    "@playwright/test": "^1.59.1"
+    "@playwright/test": "^1.59.1",
+    "@types/node": "^25.6.0"
   }
 }
