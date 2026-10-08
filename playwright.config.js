@@ -29,8 +29,9 @@ module.exports = defineConfig({
         ['list'],
         ['html', { outputFolder: 'playwright-report', open: 'never' }],
         ['junit', { outputFile: 'test-results/results.xml' }],
+        ['allure-playwright', { resultsDir: 'allure-results' }],
       ]
-    : [['list'], ['html', { outputFolder: 'playwright-report', open: 'never' }]],
+    : [['list'], ['html', { outputFolder: 'playwright-report', open: 'never' }], ['allure-playwright', { resultsDir: 'allure-results' }]],
 
   use: {
     baseURL: process.env.BASE_URL || 'https://www.demoblaze.com/',
